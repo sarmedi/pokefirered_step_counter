@@ -10,7 +10,7 @@
 #include "berry_powder.h"
 #include "overworld.h"
 #include "quest_log.h"
-
+#include "steps.h"
 #define SAVEBLOCK_MOVE_RANGE    128
 
 struct LoadedSaveData
@@ -161,6 +161,8 @@ void SavePlayerParty(void)
 
     for (i = 0; i < PARTY_SIZE; i++)
         gSaveBlock1Ptr->playerParty[i] = gPlayerParty[i];
+
+    gSaveBlock1Ptr->stepCounter = gStepCounter;
 }
 
 void LoadPlayerParty(void)
@@ -171,6 +173,8 @@ void LoadPlayerParty(void)
 
     for (i = 0; i < PARTY_SIZE; i++)
         gPlayerParty[i] = gSaveBlock1Ptr->playerParty[i];
+
+    gStepCounter = gSaveBlock1Ptr->stepCounter;
 }
 
 void SaveObjectEvents(void)

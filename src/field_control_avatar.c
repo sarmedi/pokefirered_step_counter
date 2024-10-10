@@ -20,6 +20,7 @@
 #include "renewable_hidden_items.h"
 #include "quest_log.h"
 #include "safari_zone.h"
+#include "steps.h"
 #include "script.h"
 #include "start_menu.h"
 #include "trainer_see.h"
@@ -215,6 +216,7 @@ int ProcessPlayerFieldInput(struct FieldInput *input)
     if (input->tookStep)
     {
         IncrementGameStat(GAME_STAT_STEPS);
+        gStepCounter++;
         WonderNews_IncrementStepCounter();
         IncrementRenewableHiddenItemStepCounter();
         RunMassageCooldownStepCounter();

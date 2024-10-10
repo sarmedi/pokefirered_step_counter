@@ -53,6 +53,7 @@
 #include "constants/region_map_sections.h"
 #include "constants/songs.h"
 #include "constants/sound.h"
+#include "steps.h"
 
 #define PLAYER_LINK_STATE_IDLE 0x80
 #define PLAYER_LINK_STATE_BUSY 0x81
@@ -1517,6 +1518,7 @@ void CB2_NewGame(void)
     FieldClearVBlankHBlankCallbacks();
     StopMapMusic();
     ResetSafariZoneFlag_();
+    SetStepsZoneFlag();
     NewGameInitData();
     ResetInitialPlayerAvatarState();
     PlayTimeCounter_Start();
@@ -1539,6 +1541,7 @@ void CB2_WhiteOut(void)
         FieldClearVBlankHBlankCallbacks();
         StopMapMusic();
         ResetSafariZoneFlag_();
+        SetStepsZoneFlag();
         DoWhiteOut();
         SetInitialPlayerAvatarStateWithDirection(DIR_NORTH);
         ScriptContext_Init();
@@ -1681,6 +1684,7 @@ void CB2_ContinueSavedGame(void)
     FieldClearVBlankHBlankCallbacks();
     StopMapMusic();
     ResetSafariZoneFlag_();
+    SetStepsZoneFlag();
     LoadSaveblockMapHeader();
     LoadSaveblockObjEventScripts();
     UnfreezeObjectEvents();
@@ -2313,6 +2317,7 @@ void CB2_EnterFieldFromQuestLog(void)
     StopMapMusic();
     gGlobalFieldTintMode = QL_TINT_BACKUP_GRAYSCALE;
     ResetSafariZoneFlag_();
+    SetStepsZoneFlag();
     LoadSaveblockMapHeader();
     LoadSaveblockObjEventScripts();
     UnfreezeObjectEvents();

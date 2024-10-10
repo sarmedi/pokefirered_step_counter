@@ -162,6 +162,7 @@ SECTIONS {
         src/fldeff_berrytree.o(.text);
         src/field_special_scene.o(.text);
         src/safari_zone.o(.text);
+        src/steps.o(.text);
         src/item_use.o(.text);
         src/battle_anim_effects_1.o(.text);
         src/battle_anim_effects_2.o(.text);

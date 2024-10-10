@@ -36,6 +36,7 @@
 #include "help_system.h"
 #include "constants/songs.h"
 #include "constants/field_weather.h"
+#include "steps.h"
 
 enum StartMenuOption
 {
@@ -65,6 +66,7 @@ static EWRAM_DATA u8 sNumStartMenuItems = 0;
 static EWRAM_DATA u8 sStartMenuOrder[MAX_STARTMENU_ITEMS] = {};
 static EWRAM_DATA s8 sDrawStartMenuState[2] = {};
 static EWRAM_DATA u8 sSafariZoneStatsWindowId = 0;
+static EWRAM_DATA u8 sStepsWindowId = 0;
 static ALIGNED(4) EWRAM_DATA u8 sSaveStatsWindowId = 0;
 
 static u8 (*sSaveDialogCB)(void);
@@ -74,6 +76,7 @@ static bool8 sSaveDialogIsPrinting;
 static void SetUpStartMenu_Link(void);
 static void SetUpStartMenu_UnionRoom(void);
 static void SetUpStartMenu_SafariZone(void);
+static void SetUpStartMenu_Steps(void);
 static void SetUpStartMenu_NormalField(void);
 static bool8 StartCB_HandleInput(void);
 static void StartMenu_FadeScreenIfLeavingOverworld(void);
@@ -125,6 +128,15 @@ static const struct MenuAction sStartMenuActionTable[] = {
 };
 
 static const struct WindowTemplate sSafariZoneStatsWindowTemplate = {
+    .bg = 0,
+    .tilemapLeft = 1,
+    .tilemapTop = 1,
+    .width = 10,
+    .height = 10,
+    .paletteNum = 15,
+    .baseBlock = 0x008
+};
+static const struct WindowTemplate sStepsWindowTemplate = {
     .bg = 0,
     .tilemapLeft = 1,
     .tilemapTop = 1,
@@ -198,6 +210,8 @@ static void SetUpStartMenu(void)
         SetUpStartMenu_Link();
     else if (InUnionRoom() == TRUE)
         SetUpStartMenu_UnionRoom();
+    else if (GetStepsZoneFlag() == TRUE && GetSafariZoneFlag() != TRUE)
+        SetUpStartMenu_Steps();
     else if (GetSafariZoneFlag() == TRUE)
         SetUpStartMenu_SafariZone();
     else
@@ -217,7 +231,6 @@ static void SetUpStartMenu_NormalField(void)
         AppendToStartMenuItems(STARTMENU_POKEMON);
     AppendToStartMenuItems(STARTMENU_BAG);
     AppendToStartMenuItems(STARTMENU_PLAYER);
-    AppendToStartMenuItems(STARTMENU_SAVE);
     AppendToStartMenuItems(STARTMENU_OPTION);
     AppendToStartMenuItems(STARTMENU_EXIT);
 }
@@ -229,6 +242,16 @@ static void SetUpStartMenu_SafariZone(void)
     AppendToStartMenuItems(STARTMENU_POKEMON);
     AppendToStartMenuItems(STARTMENU_BAG);
     AppendToStartMenuItems(STARTMENU_PLAYER);
+    AppendToStartMenuItems(STARTMENU_OPTION);
+    AppendToStartMenuItems(STARTMENU_EXIT);
+}
+static void SetUpStartMenu_Steps(void)
+{
+    AppendToStartMenuItems(STARTMENU_POKEDEX);
+    AppendToStartMenuItems(STARTMENU_POKEMON);
+    AppendToStartMenuItems(STARTMENU_BAG);
+    AppendToStartMenuItems(STARTMENU_PLAYER);
+    AppendToStartMenuItems(STARTMENU_SAVE);
     AppendToStartMenuItems(STARTMENU_OPTION);
     AppendToStartMenuItems(STARTMENU_EXIT);
 }
@@ -257,13 +280,32 @@ static void DrawSafariZoneStatsWindow(void)
     PutWindowTilemap(sSafariZoneStatsWindowId);
     DrawStdWindowFrame(sSafariZoneStatsWindowId, FALSE);
     ConvertIntToDecimalStringN(gStringVar1, gSafariZoneStepCounter, STR_CONV_MODE_RIGHT_ALIGN, 3);
-    ConvertIntToDecimalStringN(gStringVar2, 600, STR_CONV_MODE_RIGHT_ALIGN, 3);
-    ConvertIntToDecimalStringN(gStringVar3, gNumSafariBalls, STR_CONV_MODE_RIGHT_ALIGN, 2);
+    ConvertIntToDecimalStringN(gStringVar2, gNumSafariBalls, STR_CONV_MODE_RIGHT_ALIGN, 2);
+    ConvertIntToDecimalStringN(gStringVar3, gStepCounter, STR_CONV_MODE_LEFT_ALIGN, 8);
     StringExpandPlaceholders(gStringVar4, gText_MenuSafariStats);
     AddTextPrinterParameterized(sSafariZoneStatsWindowId, FONT_NORMAL, gStringVar4, 4, 3, 0xFF, NULL);
     CopyWindowToVram(sSafariZoneStatsWindowId, COPYWIN_GFX);
 }
+static void DrawStepsStatsWindow(void)
+{
+    sStepsWindowId = AddWindow(&sStepsWindowTemplate);
+    PutWindowTilemap(sStepsWindowId);
+    DrawStdWindowFrame(sStepsWindowId, FALSE);
+    ConvertIntToDecimalStringN(gStringVar1, gStepCounter, STR_CONV_MODE_LEFT_ALIGN, 8);
+    StringExpandPlaceholders(gStringVar4, gText_MenuStepStats);
+    AddTextPrinterParameterized(sStepsWindowId, FONT_NORMAL, gStringVar4, 4, 3, 0xFF, NULL);
+    CopyWindowToVram(sStepsWindowId, COPYWIN_GFX);
+}
 
+static void DestroyStepsWindow(void)
+{
+    if (GetStepsZoneFlag())
+    {
+        ClearStdWindowAndFrameToTransparent(sStepsWindowId, FALSE);
+        CopyWindowToVram(sStepsWindowId, COPYWIN_GFX);
+        RemoveWindow(sStepsWindowId);
+    }
+}
 static void DestroySafariZoneStatsWindow(void)
 {
     if (GetSafariZoneFlag())
@@ -325,6 +367,11 @@ static s8 DoDrawStartMenu(void)
             sDrawStartMenuState[0]++;
         break;
     case 5:
+        if (GetStepsZoneFlag() && !GetSafariZoneFlag())
+            DrawStepsStatsWindow();
+        sDrawStartMenuState[0]++;
+        break;
+    case 6:
         sStartMenuCursorPos = Menu_InitCursor(GetStartMenuWindowId(), FONT_NORMAL, 0, 0, 15, sNumStartMenuItems, sStartMenuCursorPos);
         if (!MenuHelpers_IsLinkActive() && InUnionRoom() != TRUE && gSaveBlock2Ptr->optionsButtonMode == OPTIONS_BUTTON_MODE_HELP)
         {
@@ -438,6 +485,7 @@ static bool8 StartCB_HandleInput(void)
         DestroySafariZoneStatsWindow();
         DestroyHelpMessageWindow_();
         CloseStartMenu();
+        DestroyStepsWindow();
         return TRUE;
     }
     return FALSE;
@@ -707,6 +755,7 @@ static bool8 SaveDialog_Wait60FramesThenCheckAButtonHeld(void)
 
 static u8 SaveDialogCB_PrintAskSaveText(void)
 {
+    DestroyStepsWindow();
     ClearStdWindowAndFrame(GetStartMenuWindowId(), FALSE);
     RemoveStartMenuWindow();
     DestroyHelpMessageWindow(0);

@@ -29,7 +29,7 @@
 #include "berry_powder.h"
 #include "pokemon_jump.h"
 #include "event_scripts.h"
-
+#include "steps.h"
 // this file's functions
 static void ResetMiniGamesResults(void);
 
@@ -107,7 +107,7 @@ void ResetMenuAndMonGlobals(void)
 void NewGameInitData(void)
 {
     u8 rivalName[PLAYER_NAME_LENGTH + 1];
-
+    
     StringCopy(rivalName, gSaveBlock1Ptr->rivalName);
     gDifferentSaveFile = TRUE;
     gSaveBlock2Ptr->encryptionKey = 0;
@@ -146,9 +146,12 @@ void NewGameInitData(void)
     ClearMysteryGift();
     SetAllRenewableItemFlags();
     WarpToPlayersRoom();
+    gSaveBlock1Ptr->stepCounter = 0;
+    gStepCounter=0;
     RunScriptImmediately(EventScript_ResetAllMapFlags);
     StringCopy(gSaveBlock1Ptr->rivalName, rivalName);
     ResetTrainerTowerResults();
+    SetStepsZoneFlag();
 }
 
 static void ResetMiniGamesResults(void)

@@ -52,6 +52,7 @@
 	.include "src/naming_screen.o"
 	.include "src/money.o"
 	.include "src/safari_zone.o"
+	.include "src/steps.o"
 	.include "src/item_use.o"
 	.include "src/battle_anim_effects_1.o"
 	.include "src/battle_anim_dragon.o"
